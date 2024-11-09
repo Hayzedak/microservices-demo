@@ -37,11 +37,6 @@ jobs:
           unzip sonar-scanner-cli-${{ env.SONAR_SCANNER_VERSION }}-linux.zip -d $HOME/sonar-scanner
           echo "SONAR_SCANNER_HOME=$HOME/sonar-scanner/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}" >> $GITHUB_ENV
 
-      # Build Docker Image
-      - name: Build Docker Image
-        run: |
-          docker build -t ${DOCKER_HUB_USERNAME}/${SERVICE_NAME}:${{ github.sha }} $SERVICE_PATH
-
       # Run SonarQube analysis
       - name: SonarQube Analysis
         env:
@@ -53,11 +48,13 @@ jobs:
             -Dsonar.projectName="Microservices adservice" \
             -Dsonar.projectVersion=1.0 \
             -Dsonar.sources=$SERVICE_PATH \
-            -Dsonar.java.binaries=$SERVICE_PATH/target/classes \
-            -Dsonar.junit.reportPaths=$SERVICE_PATH/target/surefire-reports \
-            -Dsonar.coverage.jacoco.xmlReportPaths=$SERVICE_PATH/target/site/jacoco/jacoco.xml \
             -Dsonar.host.url=$SONAR_HOST_URL \
             -Dsonar.login=$SONAR_TOKEN
+
+      # Build Docker Image
+      - name: Build Docker Image
+        run: |
+          docker build -t ${DOCKER_HUB_USERNAME}/${SERVICE_NAME}:${{ github.sha }} $SERVICE_PATH
 
       # Run Trivy Security Scan
       - name: Run Trivy Security Scan
