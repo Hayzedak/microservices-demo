@@ -12,35 +12,36 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
     
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Build adservice
+        working-directory: ./src/adservice
+        run: |
+          chmod +x gradlew
+          ./gradlew build
     
-    - name: Build adservice
-      working-directory: ./src/adservice
-      run: |
-        chmod +x gradlew
-        ./gradlew build
-    
-    - name: SonarQube Scan
-      uses: sonarsource/sonarqube-scan-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      with:
-        args: >
-          -Dsonar.projectKey=microservices-demo-adservice
-          -Dsonar.sources=./src/adservice
-          -Dsonar.java.binaries=./src/adservice/build/classes/java/main
-          -Dsonar.sourceEncoding=UTF-8
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=microservices-demo-adservice
+            -Dsonar.sources=./src/adservice
+            -Dsonar.java.binaries=./src/adservice/build/classes/java/main
+            -Dsonar.sourceEncoding=UTF-8
 
   build-and-publish:
     name: Build and Publish Docker Image
-    needs: sonarqube-scan
+    needs: sonarqube
     runs-on: ubuntu-latest
 
     steps:
