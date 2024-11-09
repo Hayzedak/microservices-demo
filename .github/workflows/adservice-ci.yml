@@ -30,16 +30,18 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      # Run SonarQube analysis (using prebuilt SonarScanner GitHub Action)
+      # Run SonarQube analysis (using official SonarSource scanner)
       - name: SonarQube Analysis
-        uses: SonarSource/sonar-scanner-action@v3
+        uses: SonarSource/sonarqube-scan-action@v1.1.0  # Changed this line
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_AUTH_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
-          sonar-project-key: 'microservices-demo-adservice'
-          sonar-project-name: 'Microservices adservice'
-          sonar-project-version: '1.0'
-          sonar-login: ${{ secrets.SONAR_AUTH_TOKEN }}
-          sonar-host-url: ${{ secrets.SONAR_HOST_URL }}
-          sonar-sources: $SERVICE_PATH
+          args: >
+            -Dsonar.projectKey=microservices-demo-adservice
+            -Dsonar.projectName='Microservices adservice'
+            -Dsonar.projectVersion=1.0
+            -Dsonar.sources=${{ env.SERVICE_PATH }}
 
       # Build Docker Image
       - name: Build Docker Image
