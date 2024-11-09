@@ -12,50 +12,63 @@ env:
   DOCKER_HUB_USERNAME: 'hayzedak'
   SERVICE_NAME: 'adservice'
   SERVICE_PATH: './src/adservice'
-  SONAR_SCANNER_VERSION: '6.2' 
 
 jobs:
-  build-and-publish:
+  sonarqube-scan:
+    name: SonarQube Analysis
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Java 17
+          fetch-depth: 0
+          
+      - name: Set up Java
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'zulu'
-
-      # Run SonarQube analysis (using official SonarSource scanner)
-      - name: SonarQube Analysis
-        uses: SonarSource/sonarqube-scan-action@v1.1.0  # Changed this line
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_AUTH_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          
+      - name: Cache SonarQube packages
+        uses: actions/cache@v3
         with:
-          args: >
-            -Dsonar.projectKey=microservices-demo-adservice
-            -Dsonar.projectName='Microservices adservice'
-            -Dsonar.projectVersion=1.0
-            -Dsonar.sources=${{ env.SERVICE_PATH }}
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+          
+      - name: Build and analyze with SonarQube
+        working-directory: ${{ env.SERVICE_PATH }}
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build sonar \
+            -Dsonar.projectKey=microservices-demo-adservice \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_AUTH_TOKEN }} \
+            -Dsonar.java.binaries=build/classes \
+            -Dsonar.sources=. \
+            -Dsonar.sourceEncoding=UTF-8
 
-      # Build Docker Image
+  build-and-publish:
+    name: Build and Publish Docker Image
+    needs: sonarqube-scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Build Docker Image
         run: |
-          docker build -t ${DOCKER_HUB_USERNAME}/${SERVICE_NAME}:${{ github.sha }} $SERVICE_PATH
+          docker build -t ${{ env.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} ${{ env.SERVICE_PATH }}
 
-      # Run Trivy Security Scan
       - name: Run Trivy Security Scan
-        env:
-          DOCKER_IMAGE_TAG: ${{ github.sha }}
         run: |
           docker pull aquasec/trivy:latest
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image \
-            ${DOCKER_HUB_USERNAME}/${SERVICE_NAME}:${DOCKER_IMAGE_TAG} --severity HIGH,CRITICAL
+            ${{ env.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} --severity HIGH,CRITICAL
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -65,10 +78,12 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker push ${DOCKER_HUB_USERNAME}/${SERVICE_NAME}:${{ github.sha }}
-          docker tag ${DOCKER_HUB_USERNAME}/${SERVICE_NAME}:${{ github.sha }} ${DOCKER_HUB_USERNAME}/${SERVICE_NAME}:latest
-          docker push ${DOCKER_HUB_USERNAME}/${SERVICE_NAME}:latest
+          docker push ${{ env.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker tag ${{ env.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            ${{ env.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest
+          docker push ${{ env.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest
 
       - name: Clean up Workspace
+        if: always()
         run: |
-          rm -rf $SERVICE_PATH
+          rm -rf ${{ env.SERVICE_PATH }}
