@@ -45,6 +45,7 @@ jobs:
             -Dsonar.java.binaries=$SERVICE_PATH/target/classes \
             -Dsonar.junit.reportPaths=$SERVICE_PATH/target/surefire-reports \
             -Dsonar.coverage.jacoco.xmlReportPaths=$SERVICE_PATH/target/site/jacoco/jacoco.xml \
+            -Dsonar.host.url=http://<your-sonarqube-server-url> \  # Replace with actual server URL
             -Dsonar.login=$SONAR_TOKEN
 
       - name: Log in to Docker Hub
