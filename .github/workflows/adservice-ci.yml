@@ -24,29 +24,16 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Set up Java
-        uses: actions/setup-java@v3
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_AUTH_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
-          java-version: '17'
-          distribution: 'zulu'
-          
-      - name: Cache SonarQube packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-          
-      - name: Build and analyze with SonarQube
-        working-directory: ${{ env.SERVICE_PATH }}
-        run: |
-          chmod +x ./gradlew
-          ./gradlew build sonar \
-            -Dsonar.projectKey=microservices-demo-adservice \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_AUTH_TOKEN }} \
-            -Dsonar.java.binaries=build/classes \
-            -Dsonar.sources=. \
+          args: >
+            -Dsonar.projectKey=microservices-demo-adservice
+            -Dsonar.sources=${{ env.SERVICE_PATH }}
+            -Dsonar.java.binaries=${{ env.SERVICE_PATH }}/build/classes
             -Dsonar.sourceEncoding=UTF-8
 
   build-and-publish:
