@@ -30,26 +30,16 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      # Download and install SonarScanner version 6.2
-      - name: Download and install SonarScanner 6.2
-        run: |
-          wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${{ env.SONAR_SCANNER_VERSION }}-linux.zip
-          unzip sonar-scanner-cli-${{ env.SONAR_SCANNER_VERSION }}-linux.zip -d $HOME/sonar-scanner
-          echo "SONAR_SCANNER_HOME=$HOME/sonar-scanner/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}" >> $GITHUB_ENV
-
-      # Run SonarQube analysis
+      # Run SonarQube analysis (using prebuilt SonarScanner GitHub Action)
       - name: SonarQube Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_AUTH_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  # Using SONAR_HOST_URL secret for the SonarQube server URL
-        run: |
-          $SONAR_SCANNER_HOME/bin/sonar-scanner \
-            -Dsonar.projectKey=microservices-demo-adservice \
-            -Dsonar.projectName="Microservices adservice" \
-            -Dsonar.projectVersion=1.0 \
-            -Dsonar.sources=$SERVICE_PATH \
-            -Dsonar.host.url=$SONAR_HOST_URL \
-            -Dsonar.login=$SONAR_TOKEN
+        uses: SonarSource/sonar-scanner-action@v3
+        with:
+          sonar-project-key: 'microservices-demo-adservice'
+          sonar-project-name: 'Microservices adservice'
+          sonar-project-version: '1.0'
+          sonar-login: ${{ secrets.SONAR_AUTH_TOKEN }}
+          sonar-host-url: ${{ secrets.SONAR_HOST_URL }}
+          sonar-sources: $SERVICE_PATH
 
       # Build Docker Image
       - name: Build Docker Image
