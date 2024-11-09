@@ -28,7 +28,6 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adoptopenjdk'
 
       # Download and install SonarScanner version 6.2
       - name: Download and install SonarScanner 6.2
