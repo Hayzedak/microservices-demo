@@ -1,40 +1,42 @@
-name: Microservices Demo Pipeline
+name: SonarQube Analysis
 
 on:
   push:
-    branches:
-      - main  
+    branches: [ main ]
   pull_request:
-    branches:
-      - main  
-
-env:
-  DOCKER_HUB_USERNAME: 'hayzedak'
-  SERVICE_NAME: 'adservice'
-  SERVICE_PATH: './src/adservice'
+    branches: [ main ]
 
 jobs:
-  sonarqube-scan:
-    name: SonarQube Analysis
+  sonarqube:
+    name: SonarQube Scan
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_AUTH_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.projectKey=microservices-demo-adservice
-            -Dsonar.sources=${{ env.SERVICE_PATH }}
-            -Dsonar.java.binaries=${{ env.SERVICE_PATH }}/build/classes
-            -Dsonar.sourceEncoding=UTF-8
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Build adservice
+      working-directory: ./src/adservice
+      run: |
+        chmod +x gradlew
+        ./gradlew build
+    
+    - name: SonarQube Scan
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      with:
+        args: >
+          -Dsonar.projectKey=microservices-demo-adservice
+          -Dsonar.sources=./src/adservice
+          -Dsonar.java.binaries=./src/adservice/build/classes/java/main
+          -Dsonar.sourceEncoding=UTF-8
 
   build-and-publish:
     name: Build and Publish Docker Image
