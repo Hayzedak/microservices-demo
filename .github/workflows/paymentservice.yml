@@ -1,28 +1,27 @@
-name: loadgenerator CI
+name: paymentservice CI
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   sonarqube:
     name: SonarQube Scan
     runs-on: ubuntu-latest
     env:
-      SERVICE_NAME: "loadgenerator"
-      SERVICE_PATH: "./src/loadgenerator"
+      SERVICE_NAME: "paymentservice"
+      SERVICE_PATH: "./src/paymentservice"
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          python-version: '3.12.6'
+          node-version: '20.17.0'  
 
       - name: Install Dependencies
         working-directory: ${{ env.SERVICE_PATH }}
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: npm install
 
       - name: Install SonarScanner
         run: |
@@ -35,7 +34,7 @@ jobs:
         working-directory: ${{ env.SERVICE_PATH }}
         run: |
           sonar-scanner \
-            -Dsonar.projectKey="microservices-demo-loadgenerator" \
+            -Dsonar.projectKey="microservices-demo-paymentservice" \
             -Dsonar.sources=. \
             -Dsonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
             -Dsonar.login="${{ secrets.SONAR_AUTH_TOKEN }}"
@@ -45,8 +44,8 @@ jobs:
     needs: sonarqube
     runs-on: ubuntu-latest
     env:
-      SERVICE_NAME: "loadgenerator"
-      SERVICE_PATH: "./src/loadgenerator"
+      SERVICE_NAME: "paymentservice"
+      SERVICE_PATH: "./src/paymentservice"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

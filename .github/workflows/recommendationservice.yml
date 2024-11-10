@@ -1,15 +1,16 @@
-name: loadgenerator CI
+name: recommendationservice CI
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   sonarqube:
     name: SonarQube Scan
     runs-on: ubuntu-latest
     env:
-      SERVICE_NAME: "loadgenerator"
-      SERVICE_PATH: "./src/loadgenerator"
+      SERVICE_NAME: "recommendationservice"
+      SERVICE_PATH: "./src/recommendationservice"
     steps:
       - uses: actions/checkout@v3
 
@@ -35,7 +36,7 @@ jobs:
         working-directory: ${{ env.SERVICE_PATH }}
         run: |
           sonar-scanner \
-            -Dsonar.projectKey="microservices-demo-loadgenerator" \
+            -Dsonar.projectKey="microservices-demo-recommendationservice" \
             -Dsonar.sources=. \
             -Dsonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
             -Dsonar.login="${{ secrets.SONAR_AUTH_TOKEN }}"
@@ -45,8 +46,8 @@ jobs:
     needs: sonarqube
     runs-on: ubuntu-latest
     env:
-      SERVICE_NAME: "loadgenerator"
-      SERVICE_PATH: "./src/loadgenerator"
+      SERVICE_NAME: "recommendationservice"
+      SERVICE_PATH: "./src/recommendationservice"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
