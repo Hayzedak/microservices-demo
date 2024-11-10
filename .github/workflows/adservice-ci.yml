@@ -29,7 +29,7 @@ jobs:
           ./gradlew sonarqube \
             -Dsonar.projectKey=microservices-demo-adservice \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.login=${{ secrets.SONAR_AUTH_TOKEN }}
 
   build-and-publish:
     name: Build and Publish Docker Image
