@@ -1,4 +1,4 @@
-name: SonarQube Analysis
+name: Cartservice CI
 
 on:
   push:
@@ -24,6 +24,12 @@ jobs:
       - name: Install dependencies
         working-directory: ${{ env.SERVICE_PATH }}
         run: dotnet restore
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Add .NET tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH  
 
       - name: SonarQube Scan
         working-directory: ${{ env.SERVICE_PATH }}
