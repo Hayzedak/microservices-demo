@@ -48,11 +48,19 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} ${{ env.SERVICE_PATH }}
 
-      - name: Run Trivy Security Scan
+      - name: Trivy Security Scan
+        env:
+          TRIVY_DB_REPOSITORY: "public.ecr.aws/aquasecurity/trivy-db"
+          TRIVY_JAVA_DB_REPOSITORY: "public.ecr.aws/aquasecurity/trivy-java-db"
         run: |
-          docker pull aquasec/trivy:latest
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image \
-            ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} --severity HIGH,CRITICAL
+          docker pull public.ecr.aws/aquasecurity/trivy:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -e TRIVY_DB_REPOSITORY="${{ env.TRIVY_DB_REPOSITORY }}" \
+            -e TRIVY_JAVA_DB_REPOSITORY="${{ env.TRIVY_JAVA_DB_REPOSITORY }}" \
+            public.ecr.aws/aquasecurity/trivy:latest image \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --severity HIGH,CRITICAL
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
