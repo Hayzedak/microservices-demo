@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paymentservice
+  template:
+    metadata:
+      labels:
+        app: paymentservice
+    spec:
+      containers:
+      - name: paymentservice
+        image: hayzedak/paymentservice:latest
+        ports:
+        - containerPort: 50051
+        env:
+        - name: PORT
+          value: "50051"
+        - name: DISABLE_PROFILER
+          value: "1"
+        - name: DISABLE_TRACING
+          value: "1"
+        - name: DISABLE_DEBUGGING
+          value: "1"
+      # restartPolicy: Unless-stopped
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paymentservice
+spec:
+  selector:
+    app: paymentservice
+  ports:
+  - port: 50051
+    targetPort: 50051

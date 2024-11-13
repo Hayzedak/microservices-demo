@@ -1,0 +1,54 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: hayzedak/frontend:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        - name: GOTRACEBACK
+          value: single
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice:3550
+        - name: CURRENCY_SERVICE_ADDR
+          value: currencyservice:7000
+        - name: CART_SERVICE_ADDR
+          value: cartservice:7070
+        - name: RECOMMENDATION_SERVICE_ADDR
+          value: recommendationservice:8080
+        - name: SHIPPING_SERVICE_ADDR
+          value: shippingservice:50051
+        - name: SHOPPING_ASSISTANT_SERVICE_ADDR
+          value: disabled
+        - name: AD_SERVICE_ADDR
+          value: adservice:9555
+        - name: CHECKOUT_SERVICE_ADDR
+          value: checkoutservice:5050
+      # restartPolicy: Unless-stopped
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: LoadBalancer
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 8080
