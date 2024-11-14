@@ -29,4 +29,10 @@ metadata:
   name: loadgenerator
 spec:
   selector:
-    app: loadgenerator
+     app: loadgenerator
+  ports:
+    - port: 80           # Dummy port to satisfy the Service spec requirement
+      targetPort: 8080    # Target port, can be any unused port since loadgenerator doesn't need on
+      #protocol: TCP
+     # type: ClusterIP         # Keeps the service internal to the Kubernetes cluster
+
